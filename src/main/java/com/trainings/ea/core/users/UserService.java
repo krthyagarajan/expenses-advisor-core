@@ -68,7 +68,7 @@ public class UserService {
     }
 
 
-    public Optional<UserDto> validateUser(String username, String password) {
+    public Optional<UserDto> validateActiveUser(String username, String password) {
 
         Optional<UserEntity> userEntity = userRepository.findByUsernameAndPasswordAndActive(username, password, true);
 
@@ -77,10 +77,8 @@ public class UserService {
         if (userEntity.isPresent()) {
             userDto = modelMapper.map(userEntity.get(), UserDto.class);
         } else {
-            throw new UserValidationException("Username/password is incorrect.  The user cannot be validated");
+            throw new UserValidationException("Username/password is incorrect or user not found.");
         }
         return Optional.of(userDto);
     }
-
-
 }
