@@ -1,11 +1,13 @@
+spring:
+  application:
+    name: expenses-advisor-core
+  datasource:
+    url: jdbc:mysql://localhost:3306/ea_core
+    username: root
+    password: root
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
 server:
   port: 9001
-
-spring:
-  h2:
-    console:
-      enabled: true
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:

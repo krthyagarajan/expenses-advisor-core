@@ -1,12 +1,18 @@
 package com.trainings.ea.core.users;
 
+import com.trainings.ea.core.common.InputFieldsValidationException;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @AllArgsConstructor
@@ -17,16 +23,32 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserDto> getUser(@PathVariable UUID userId){
-        return new ResponseEntity<>(userService.getUser(userId), HttpStatus.OK);
-    }
-
-    @PostMapping( consumes = "application/json")
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto){
-        return new ResponseEntity<>(userService.createUser(userDto), HttpStatus.CREATED);
+        UserDto user = userService.getUser(userId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @GetMapping()
     public ResponseEntity<List<UserDto>> getAllUsers(){
-        return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
+        List<UserDto> allUsers = userService.getAllUsers();
+        return new ResponseEntity<>(allUsers, HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<UserDto> createUser(@RequestBody @Valid UserInputDto userDto, BindingResult result){
+        if(result.hasErrors()){
+            String errors = result.getAllErrors().stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .collect(Collectors.joining(","));
+            throw new InputFieldsValidationException(errors);
+        }
+        UserDto user = userService.createUser(userDto);
+        return new ResponseEntity<>(user, HttpStatus.CREATED);
+    }
+
+    @PatchMapping(value = "/{userId}")
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID userId,
+                                              @RequestBody Map<String, Object> updateRequest){
+        UserDto user = userService.updateUser(userId, updateRequest);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 }

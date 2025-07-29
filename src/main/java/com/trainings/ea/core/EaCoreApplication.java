@@ -1,9 +1,7 @@
 package com.trainings.ea.core;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class EaCoreApplication {
@@ -12,8 +10,4 @@ public class EaCoreApplication {
 		SpringApplication.run(EaCoreApplication.class, args);
 	}
 
-	@Bean
-	public ModelMapper modelMapper(){
-		return new ModelMapper();
-	}
 }

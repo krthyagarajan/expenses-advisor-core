@@ -1,10 +1,17 @@
 package com.trainings.ea.core.users;
 
+import com.trainings.ea.core.users.exception.DuplicateUserException;
+import com.trainings.ea.core.users.exception.UserValidationException;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -14,7 +21,6 @@ public class UserService {
 
     private UserRepository userRepository;
     private ModelMapper modelMapper;
-
 
     public List<UserDto> getAllUsers() {
         return userRepository.findAll()
@@ -32,8 +38,48 @@ public class UserService {
 
     public UserDto createUser( UserDto userDto){
         UserEntity userEntity = modelMapper.map(userDto, UserEntity.class);
-        userEntity = userRepository.save(userEntity);
+        try{
+            userEntity.setActive(true);
+            userEntity = userRepository.save(userEntity);
+        } catch(DataIntegrityViolationException e){
+            throw new DuplicateUserException(String.format("User name [%s] is already is used.  Please provide new username.", userDto.getUsername()));
+        }
         return modelMapper.map(userEntity, UserDto.class);
+    }
+
+    public UserDto updateUser(UUID userId, Map<String, Object> requestMap) {
+
+        Optional<UserEntity> userEntity = userRepository.findById(userId);
+        if (userEntity.isPresent()) {
+            final UserEntity entity = userEntity.get();
+            requestMap.forEach((key, value)->{
+                Field field = ReflectionUtils.findFieldIgnoreCase(UserEntity.class, key);
+                if(field != null){
+                    field.setAccessible(true);
+                    ReflectionUtils.setField(field, entity, value);
+                }
+            });
+            userRepository.save(entity);
+
+        } else {
+            throw new UserValidationException("Not able to find the user");
+        }
+        return modelMapper.map(userEntity.get(), UserDto.class);
+    }
+
+
+    public Optional<UserDto> validateUser(String username, String password) {
+
+        Optional<UserEntity> userEntity = userRepository.findByUsernameAndPasswordAndActive(username, password, true);
+
+        UserDto userDto;
+
+        if (userEntity.isPresent()) {
+            userDto = modelMapper.map(userEntity.get(), UserDto.class);
+        } else {
+            throw new UserValidationException("Username/password is incorrect.  The user cannot be validated");
+        }
+        return Optional.of(userDto);
     }
 
 
