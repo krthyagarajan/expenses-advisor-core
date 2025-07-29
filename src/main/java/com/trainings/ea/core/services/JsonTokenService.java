@@ -2,6 +2,7 @@ package com.trainings.ea.core.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trainings.ea.core.config.Constants;
+import com.trainings.ea.core.login.JwtSigningException;
 import com.trainings.ea.core.users.UserDto;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +41,8 @@ public class JsonTokenService {
         try {
             signedToken = signJWT(jwtClaims);
         } catch (JoseException e) {
-            throw new RuntimeException(e);
+            throw new JwtSigningException(e.getMessage());
         }
-        log.info("Signed token : {}", signedToken);
 
         return signedToken;
     }
@@ -56,11 +56,7 @@ public class JsonTokenService {
         jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.HMAC_SHA256);
         jws.setKey(key);
 
-
-        String signedToken = jws.getCompactSerialization();
-        System.out.println("Signed token : " + signedToken);
-
-        return signedToken;
+        return jws.getCompactSerialization();
     }
 
 
